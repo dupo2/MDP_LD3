@@ -80,7 +80,7 @@ def main():
     )
 
     # 3. Run the training loop
-    num_episodes = 10000
+    num_episodes = 5000
     max_steps_per_episode = 600
     epsilon_start, epsilon_end, epsilon_decay = 1.0, 0.05, 0.9996
     all_rewards = []
