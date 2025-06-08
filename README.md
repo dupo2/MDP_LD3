@@ -6,13 +6,11 @@
 
 ---
 
-### Project Architecture
+### Program Visualization
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/bb5d2938-e16f-415e-9145-ad8a6e71e22f" alt="Diagram showing the agent-environment interaction loop and Q-learning update rule.">
+  <img src="img/Program%20visualization.png" alt="Screenshot of the program running, showing the agent in the grid-world environment." width="500">
 </p>
-
----
 
 ## 🚀 About The Project
 
@@ -29,6 +27,14 @@ The main task is set in a simulated storage room:
 ### Technical Approach
 
 To solve this, the agent is trained using **Q-learning**, a model-free reinforcement learning algorithm. Specifically, **Q-function approximation** is employed to handle the potentially large state space of the environment, allowing the agent to generalize from situations it has seen to new, unseen ones.
+
+---
+
+### Logic Visualization
+
+<p align="center">
+  <img src="img/Visualization%20diagram.svg" alt="Diagram of the Q-learning logic and agent-environment interaction loop.">
+</p>
 
 ---
 
@@ -80,4 +86,3 @@ You will need Python 3.12+ and the following libraries installed. The `requireme
     python main.py
     ```
 
----
