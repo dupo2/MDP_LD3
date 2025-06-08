@@ -1,16 +1,17 @@
-# approx_q_agent.py
 import random
 import numpy as np
 from typing import List, Tuple, Dict, Optional
 
-# ... (other imports are the same)
+# Import necessary modules
 from mdp_environment import GridWorldMDP, State, Action
 from feature_extractor import FeatureExtractor
 
 Path = List[Tuple[State, Action, float]]
 
+# Define the Approximate Q-Learning Agent
 class ApproxQLearningAgent:
-    # __init__ is the same, just updates the num_features
+    
+    # Initialize the Approximate Q-Learning Agent with the MDP, feature extractor, and parameters.
     def __init__(self, mdp: GridWorldMDP, feature_extractor: FeatureExtractor,
                  gamma: float, alpha: float, epsilon: float):
         self.mdp = mdp

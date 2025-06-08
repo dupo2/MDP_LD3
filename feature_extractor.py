@@ -1,5 +1,6 @@
 # feature_extractor.py
 
+from collections import deque
 from typing import Tuple, List, Dict, Set, Optional
 
 State = Tuple[Tuple[int, int], Tuple[bool, ...]]
@@ -12,8 +13,40 @@ class FeatureExtractor:
         self.box_locations = {v: k for k, v in boxes_data.items()}
         self.obstacles = obstacles
         self.actions = ['up', 'down', 'left', 'right']
+        # The cache is essential for performance. It will store BFS results.
+        self.bfs_cache = {}
 
-    # --- MODIFIED SIGNATURE: Now accepts last_pos ---
+    def _bfs(self, start_pos: Tuple[int, int], end_pos: Tuple[int, int]) -> Optional[int]:
+        """A private helper to run the actual BFS calculation."""
+        if start_pos == end_pos:
+            return 0
+        queue = deque([(start_pos, 0)])
+        visited = {start_pos}
+        while queue:
+            (x, y), dist = queue.popleft()
+            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                next_pos = (x + dx, y + dy)
+                if next_pos == end_pos:
+                    return dist + 1
+                if (1 <= next_pos[0] <= self.grid_size and 1 <= next_pos[1] <= self.grid_size and
+                        next_pos not in self.obstacles and next_pos not in visited):
+                    visited.add(next_pos)
+                    queue.append((next_pos, dist + 1))
+        return None
+
+    def get_path_distance(self, start_pos: Tuple[int, int], end_pos: Tuple[int, int]) -> Optional[int]:
+        """
+        Public method to get the true path distance using a cache (memoization).
+        This prevents re-calculating the same path over and over.
+        """
+        # Create a consistent key for the cache (A->B is same as B->A)
+        key = tuple(sorted((start_pos, end_pos)))
+        if key not in self.bfs_cache:
+            # If the distance is not in the cache, calculate it and store it.
+            self.bfs_cache[key] = self._bfs(start_pos, end_pos)
+        # Return the cached result.
+        return self.bfs_cache[key]
+
     def get_features(self, state: State, action: Action, last_pos: Optional[Tuple[int, int]]) -> List[float]:
         player_pos, box_statuses = state
         
@@ -23,35 +56,38 @@ class FeatureExtractor:
         
         features = []
         
-        # Feature 1: Bias
+        # Feature 1: Bias (Unchanged)
         features.append(1.0)
         
-        # Feature 2: Collision
+        # Feature 2: Collision (Unchanged)
         nx, ny = next_pos
         is_collision = 1.0 if not (1 <= nx <= self.grid_size and 1 <= ny <= self.grid_size) or next_pos in self.obstacles else 0.0
         features.append(is_collision)
 
-        # Find nearest box
+        # --- THIS IS THE KEY MODIFICATION ---
+        # Find the true path distance to the nearest box from the CURRENT and NEXT positions.
         uncollected_boxes = [self.box_locations[i] for i in range(self.num_boxes) if not box_statuses[i]]
-        nearest_box_pos = None
-        if uncollected_boxes:
-            min_dist = float('inf')
-            for box_pos in uncollected_boxes:
-                dist = abs(player_pos[0] - box_pos[0]) + abs(player_pos[1] - box_pos[1])
-                if dist < min_dist:
-                    min_dist = dist
-                    nearest_box_pos = box_pos
         
-        # Feature 3: Gets closer to nearest box
-        gets_closer = 0.0
-        if nearest_box_pos and not is_collision:
-            dist_before = abs(player_pos[0] - nearest_box_pos[0]) + abs(player_pos[1] - nearest_box_pos[1])
-            dist_after = abs(next_pos[0] - nearest_box_pos[0]) + abs(next_pos[1] - nearest_box_pos[1])
-            if dist_after < dist_before:
-                gets_closer = 1.0
-        features.append(gets_closer)
+        dist_before = float('inf')
+        if uncollected_boxes:
+            all_dists = [self.get_path_distance(player_pos, box_pos) for box_pos in uncollected_boxes]
+            reachable_dists = [d for d in all_dists if d is not None]
+            if reachable_dists:
+                dist_before = min(reachable_dists)
 
-        # Feature 4: Collects a box
+        dist_after = float('inf')
+        if not is_collision and uncollected_boxes:
+            all_dists_after = [self.get_path_distance(next_pos, box_pos) for box_pos in uncollected_boxes]
+            reachable_dists_after = [d for d in all_dists_after if d is not None]
+            if reachable_dists_after:
+                dist_after = min(reachable_dists_after)
+                
+        # Feature 3: Gets closer to nearest box (using TRUE PATH DISTANCE)
+        gets_closer = 1.0 if dist_after < dist_before else 0.0
+        features.append(gets_closer)
+        # --- END MODIFICATION ---
+
+        # Feature 4: Collects a box (Unchanged)
         is_box_collected = 0.0
         if next_pos in self.box_locations and not is_collision:
             box_id = self.box_locations[next_pos]
@@ -59,8 +95,7 @@ class FeatureExtractor:
                 is_box_collected = 1.0
         features.append(is_box_collected)
 
-        # --- NEW FEATURE 5: Discourage immediate reversal ---
-        # This feature is 1.0 if the action would return the agent to its previous position.
+        # Feature 5: Discourage immediate reversal (Unchanged)
         is_reversal = 0.0
         if last_pos and next_pos == last_pos:
             is_reversal = 1.0
@@ -69,5 +104,4 @@ class FeatureExtractor:
         return features
 
     def get_num_features(self) -> int:
-        # Now we have 5 features
         return 5
