@@ -6,10 +6,26 @@
 
 ---
 
-### Project Architecture
+### Logic Visualization
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/bb5d2938-e16f-415e-9145-ad8a6e71e22f" alt="Diagram showing the agent-environment interaction loop and Q-learning update rule.">
+  <img src="img/Visualization%20diagram.svg" alt="Diagram of the Q-learning logic and agent-environment interaction loop.">
+</p>
+
+---
+
+### Example Training Results
+
+<p align="center">
+  <img src="img/Training%20result%20example.png" alt="Graph showing the agent's training progress over episodes." width="600">
+</p>
+
+---
+
+### Program Visualization
+
+<p align="center">
+  <img src="img/Program%20visualization.png" alt="Screenshot of the program running, showing the agent in the grid-world environment." width="600">
 </p>
 
 ---
@@ -79,5 +95,3 @@ You will need Python 3.12+ and the following libraries installed. The `requireme
     ```sh
     python main.py
     ```
-
----
