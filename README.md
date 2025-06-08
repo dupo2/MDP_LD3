@@ -86,11 +86,3 @@ You will need Python 3.12+ and the following libraries installed. The `requireme
     python main.py
     ```
 
-
-### Example Training Results
-
-<p align="center">
-  <img src="img/Training%20result%20example.png" alt="Graph showing the agent's training progress over episodes." width="500">
-</p>
-
----
